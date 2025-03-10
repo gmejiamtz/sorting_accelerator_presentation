@@ -423,10 +423,14 @@ Disassembly of section .text:
 - Has both PCPI and AXI Lite interfaces
 - Accepts data from sorting memory until local memory is full, sorts local memory, then returns the sorted output in from largest to smallest
 
-### Abstracting For Loops
-- For loops are unideal as they replicate the code block, which become increasingly intensive as the range increases
-- Counters act as an effective abstraction of for loops without encountering the corresponding pitfalls
+### Abstracting For Loops and Cycle Delays
+- Some familiar statements are unsuitable for HDL:
+  - For loops are unideal as they replicate the code block, which become increasingly intensive as the range increases
+  - Local memory accesses are done in a pipeline (utilizing Ethan's pipelined_mem.sv), and are available only after 2 clock cycles
+    
+- Counters act as an effective abstraction of for loops and delays, without encountering the corresponding pitfalls
 
+**For Loop Example:**
 ```
 always_comb begin
     for_i_addr_d = for_i_addr_q;
@@ -458,6 +462,9 @@ always_comb begin
     end
 end
 ```
+
+### Sorter Simulation
+
 
 ## Memory
 
