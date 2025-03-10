@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Arian Heidari, Sean Li, Gary Mejia, Mitchell Tansey">
+  <meta name="dcterms.date" content="2025-03-14">
+  <title>Sorting Accelerator on FPGA</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js//dist/reset.css">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js//dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js//dist/theme/white.css" id="theme">
+  <style>
+  .slides {
+      font-size: 0.75em;
+      overflow-y: auto;
+  }
+  .reveal ul {
+      display: block;
+  }
+  .reveal ol {
+      display: block;
+  }
+
+  img {
+      max-height: 350px !important;
+  }
+
+  figcaption {
+      font-size: 0.6em !important;
+      font-style: italic !important;
+  }
+
+  .subtitle {
+      font-style: italic !important;
+  }
+
+  .date {
+      font-size: 0.75em !important;
+  }
+
+  .reveal pre code {
+      white-space: pre-wrap; /* Allow breaking lines if needed */
+      overflow-x: auto;     /* Add horizontal scrollbars */
+      word-wrap: normal;    /* Prevent word breaking */
+  }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">Sorting Accelerator on FPGA</h1>
+  <p class="subtitle">CSE 293 - Verilog to Silicon</p>
+  <p class="author">Arian Heidari, Sean Li, Gary Mejia, Mitchell
+Tansey</p>
+  <p class="date">March 14, 2025</p>
+</section>
+
+<section>
+<section id="overview-of-project" class="title-slide slide level2">
+<h2>Overview of Project</h2>
+<ul>
+<li>Sorting algoritms are everywhere
+<ul>
+<li>Sorting task by priotory</li>
+<li>Sorting names in a roster</li>
+</ul></li>
+<li>Simple enough to implement in software
+<ul>
+<li>At best most sorts have an O(nlog(n)) runtime</li>
+<li>Can we do better in hardware?</li>
+</ul></li>
+</ul>
+</section>
+<section id="architecture" class="slide level3">
+<h3>Architecture</h3>
+<figure>
+<img data-src="img/arch.png"
+alt="Use PicoRV32 softcore to load memory for external sorter core to sort on" />
+<figcaption aria-hidden="true">Use PicoRV32 softcore to load memory for
+external sorter core to sort on</figcaption>
+</figure>
+</section>
+<section id="hardware---ulx3s-development-board" class="slide level3">
+<h3>Hardware - ULX3S Development Board</h3>
+<figure>
+<img data-src="img/ulx3s.jpg" alt="Available on crowdsupply.com" />
+<figcaption aria-hidden="true">Available on crowdsupply.com</figcaption>
+</figure>
+</section>
+<section id="specification" class="slide level3">
+<h3>Specification</h3>
+<ul>
+<li>FPGA: Lattice ECP5
+<ul>
+<li>LFE5U-85F-6BG381C (84 K LUT)</li>
+<li>LFE5U-45F-6BG381C (44 K LUT)</li>
+<li>LFE5U-12F-6BG381C (12 K LUT)</li>
+</ul></li>
+<li>USB: FTDI FT231XS (500 kbit JTAG and 3 Mbit USB-serial)</li>
+<li>RAM: 32 MB SDRAM 166 MHz</li>
+<li>Flash: 4-16 MB Quad-SPI Flash for FPGA config and user data
+storage</li>
+<li>LEDs: 11 (8 user LEDs, 2 USB LEDs, 1 Wi-Fi LED)</li>
+<li>Buttons: 7 (4 direction, 2 fire, 1 power button)</li>
+<li>Wi-Fi &amp; Bluetooth: ESP32-WROOM-32 supports a standalone JTAG web
+interface over Wi-Fi</li>
+</ul>
+</section>
+<section id="tool-flow" class="slide level3">
+<h3>Tool Flow</h3>
+<ul>
+<li>YosysHQ’s <a
+href="https://github.com/YosysHQ/oss-cad-suite-build">OSS CAD Suite</a>
+on Github Codespaces
+<ul>
+<li>Yosys for Synthesis</li>
+<li>nextpnr-ecp5 for place and route</li>
+<li>ecppack for bitstrean generation</li>
+<li>ecppll for PLL configuration</li>
+<li>fujproj/openFPGALoader for programming</li>
+<li>Verilator for simulation and linting</li>
+<li>GTKWave for waveform viewing</li>
+</ul></li>
+</ul>
+</section></section>
+<section id="components-in-detail" class="title-slide slide level2">
+<h2>Components in Detail</h2>
+
+</section>
+
+<section>
+<section id="picorv32" class="title-slide slide level2">
+<h2>PicoRV32</h2>
+<ul>
+<li>A Size-Optimized RISC-V CPU
+<ul>
+<li>Supports RV32IMC Instruction Set</li>
+<li>Single Cycle</li>
+<li>AXI Lite Interface Supported</li>
+<li>PCPI Interface to interact with external cores</li>
+</ul></li>
+<li>Available from YosysHQ’s <a
+href="https://github.com/YosysHQ/picorv32">picorv32</a> repo</li>
+</ul>
+</section>
+<section id="purpose-of-cpu" class="slide level3">
+<h3>Purpose of CPU</h3>
+<ul>
+<li>CPU is to load the sorter’s memory with integers</li>
+<li>After sorter signals that it is done, CPU “prints” out the array
+<ul>
+<li>CPU will just write to memory mapped IO to a UART module</li>
+</ul></li>
+</ul>
+</section>
+<section id="pico-co-processor-interface" class="slide level3">
+<h3>Pico Co-Processor Interface</h3>
+<ul>
+<li>Checks this bus upon receiving an unsupported instruction
+<ul>
+<li>Sends this instruction to the sorter to begin sorting</li>
+<li>Receives an instruction back to signal sorter is sorting or
+done</li>
+<li>Requires C code to inline an instruction for sorting instead of
+compiling a function</li>
+</ul></li>
+</ul>
+</section>
+<section id="bootloading-and-compiler-infrastructure"
+class="slide level3">
+<h3>Bootloading and Compiler Infrastructure</h3>
+<ul>
+<li>Requires a basic bootloader
+<ul>
+<li>Just an assembly file that sets all registers to 0, initializes SP,
+jumps to main and ebreak</li>
+<li>Uses RISCV32I GCC cross compiler</li>
+<li>Print functionality is memory mapped IO</li>
+<li>Custom Linker Script to denote memory regions of binary</li>
+</ul></li>
+</ul>
+</section>
+<section id="bootloader" class="slide level3">
+<h3>Bootloader</h3>
+<pre><code>start:
+    addi x1, zero, 0
+    addi x2, zero, 0
+    addi x3, zero, 0
+    addi x4, zero, 0
+    addi x5, zero, 0
+    addi x6, zero, 0
+    addi x7, zero, 0
+    addi x8, zero, 0
+    addi x9, zero, 0
+    addi x10, zero, 0
+    addi x11, zero, 0
+    addi x12, zero, 0
+    addi x13, zero, 0
+    addi x14, zero, 0
+    addi x15, zero, 0
+    addi x16, zero, 0
+    addi x17, zero, 0
+    addi x18, zero, 0
+    addi x19, zero, 0
+    addi x20, zero, 0
+    addi x21, zero, 0
+    addi x22, zero, 0
+    addi x23, zero, 0
+    addi x24, zero, 0
+    addi x25, zero, 0
+    addi x26, zero, 0
+    addi x27, zero, 0
+    addi x28, zero, 0
+    addi x29, zero, 0
+    addi x30, zero, 0
+    addi x31, zero, 0
+    /* set stack pointer */
+    li sp,0x01005000
+    /* call hello C code */
+    jal main
+    NOP
+    ebreak</code></pre>
+</section>
+<section id="memory-regions" class="slide level3">
+<h3>Memory Regions</h3>
+<pre><code>MEMORY {
+    code : ORIGIN = 0x00000000, LENGTH = 0x00001000
+    main_mem : ORIGIN = 0x01001000, LENGTH = 0x00004000
+    sorter_mem : ORIGIN = 0x10005000, LENGTH = 0x00004000
+}
+
+SECTIONS {
+    .text :
+    {
+        . = ALIGN(4);
+        *(.text)
+        *(.text*)
+        *(.rodata)
+        *(.rodata*)
+        *(.srodata)
+        *(.srodata*)
+        . = ALIGN(4);
+        _etext = .;
+        _sidata = _etext;
+    } &gt;code
+    .data : AT ( 0x1000 )
+    {
+        . = ALIGN(4);
+        _sdata = .;
+        _ram_start = .;
+        . = ALIGN(4);
+        *(.data)
+        *(.data*)
+        *(.sdata)
+        *(.sdata*)
+        . = ALIGN(4);
+        _edata = .;
+    } &gt;main_mem
+    .bss :
+    {
+        . = ALIGN(4);
+        _sbss = .;
+        *(.bss)
+        *(.bss*)
+        *(.sbss)
+        *(.sbss*)
+        *(COMMON)
+        . = ALIGN(4);
+        _ebss = .;
+    } &gt;main_mem
+    .sorter_section : AT ( 0x5000 )
+    {
+        KEEP(*(.sorter_section))
+    } &gt;sorter_mem
+}</code></pre>
+</section>
+<section id="elf-dump-contents" class="slide level3">
+<h3>ELF Dump Contents</h3>
+<pre><code>firmware/firmware.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 &lt;start&gt;:
+   0:   00000093            li  ra,0
+   4:   00000113            li  sp,0
+   8:   00000193            li  gp,0
+   c:   00000213            li  tp,0
+  10:   00000293            li  t0,0
+  14:   00000313            li  t1,0
+  18:   00000393            li  t2,0
+  1c:   00000413            li  s0,0
+  20:   00000493            li  s1,0
+  24:   00000513            li  a0,0
+  28:   00000593            li  a1,0
+  2c:   00000613            li  a2,0
+  30:   00000693            li  a3,0
+  34:   00000713            li  a4,0
+  38:   00000793            li  a5,0
+  3c:   00000813            li  a6,0
+  40:   00000893            li  a7,0
+  44:   00000913            li  s2,0
+  48:   00000993            li  s3,0
+  4c:   00000a13            li  s4,0
+  50:   00000a93            li  s5,0
+  54:   00000b13            li  s6,0
+  58:   00000b93            li  s7,0
+  5c:   00000c13            li  s8,0
+  60:   00000c93            li  s9,0
+  64:   00000d13            li  s10,0
+  68:   00000d93            li  s11,0
+  6c:   00000e13            li  t3,0
+  70:   00000e93            li  t4,0
+  74:   00000f13            li  t5,0
+  78:   00000f93            li  t6,0
+  7c:   01005137            lui sp,0x1005
+  80:   224000ef            jal ra,2a4 &lt;main&gt;
+  84:   00000013            nop
+  88:   00100073            ebreak
+
+0000008c &lt;print_chr&gt;:
+  8c:   1100c737            lui a4,0x1100c
+  90:   eef70793            addi    a5,a4,-273 # 1100beef &lt;arr+0x1006eef&gt;
+  94:   0ff57693            andi    a3,a0,255
+  98:   eef74603            lbu a2,-273(a4)
+  9c:   eed707a3            sb  a3,-273(a4)
+  a0:   ef074703            lbu a4,-272(a4)
+  a4:   000780a3            sb  zero,1(a5)
+  a8:   0027c703            lbu a4,2(a5)
+  ac:   00078123            sb  zero,2(a5)
+  b0:   01855513            srli    a0,a0,0x18
+  b4:   0037c703            lbu a4,3(a5)
+  b8:   00a781a3            sb  a0,3(a5)
+  bc:   00008067            ret
+
+000000c0 &lt;print_str&gt;:
+  c0:   00054703            lbu a4,0(a0)
+  c4:   02070e63            beqz    a4,100 &lt;print_str+0x40&gt;
+  c8:   1100c6b7            lui a3,0x1100c
+  cc:   00150513            addi    a0,a0,1
+  d0:   0ff77613            andi    a2,a4,255
+  d4:   eef6c583            lbu a1,-273(a3) # 1100beef &lt;arr+0x1006eef&gt;
+  d8:   eec687a3            sb  a2,-273(a3)
+  dc:   ef06c603            lbu a2,-272(a3)
+  e0:   ee068823            sb  zero,-272(a3)
+  e4:   ef16c603            lbu a2,-271(a3)
+  e8:   ee0688a3            sb  zero,-271(a3)
+  ec:   01875713            srli    a4,a4,0x18
+  f0:   ef26c603            lbu a2,-270(a3)
+  f4:   eee68923            sb  a4,-270(a3)
+  f8:   00054703            lbu a4,0(a0)
+  fc:   fc0718e3            bnez    a4,cc &lt;print_str+0xc&gt;
+ 100:   00008067            ret
+
+00000104 &lt;print_dec&gt;:
+ 104:   ff010113            addi    sp,sp,-16 # 1004ff0 &lt;_edata+0x3ff0&gt;
+ 108:   00410793            addi    a5,sp,4
+ 10c:   00078613            mv  a2,a5
+ 110:   00a00713            li  a4,10
+ 114:   0140006f            j   128 &lt;print_dec+0x24&gt;
+ 118:   00178793            addi    a5,a5,1
+ 11c:   02e576b3            remu    a3,a0,a4
+ 120:   fed78fa3            sb  a3,-1(a5)
+ 124:   02e55533            divu    a0,a0,a4
+ 128:   fe0518e3            bnez    a0,118 &lt;print_dec+0x14&gt;
+ 12c:   fec786e3            beq a5,a2,118 &lt;print_dec+0x14&gt;
+ 130:   1100c637            lui a2,0x1100c
+ 134:   00410513            addi    a0,sp,4
+ 138:   fff78793            addi    a5,a5,-1
+ 13c:   0007c703            lbu a4,0(a5)
+ 140:   03070713            addi    a4,a4,48
+ 144:   0ff77593            andi    a1,a4,255
+ 148:   eef64803            lbu a6,-273(a2) # 1100beef &lt;arr+0x1006eef&gt;
+ 14c:   eeb607a3            sb  a1,-273(a2)
+ 150:   00875593            srli    a1,a4,0x8
+ 154:   ef064803            lbu a6,-272(a2)
+ 158:   eeb60823            sb  a1,-272(a2)
+ 15c:   ef164583            lbu a1,-271(a2)
+ 160:   ee0608a3            sb  zero,-271(a2)
+ 164:   01875713            srli    a4,a4,0x18
+ 168:   ef264583            lbu a1,-270(a2)
+ 16c:   eee60923            sb  a4,-270(a2)
+ 170:   fca794e3            bne a5,a0,138 &lt;print_dec+0x34&gt;
+ 174:   01010113            addi    sp,sp,16
+ 178:   00008067            ret
+
+0000017c &lt;swap&gt;:
+ 17c:   fd010113            addi    sp,sp,-48
+ 180:   02812623            sw  s0,44(sp)
+ 184:   03010413            addi    s0,sp,48
+ 188:   fca42e23            sw  a0,-36(s0)
+ 18c:   fcb42c23            sw  a1,-40(s0)
+ 190:   fdc42783            lw  a5,-36(s0)
+ 194:   0007a783            lw  a5,0(a5)
+ 198:   fef42623            sw  a5,-20(s0)
+ 19c:   fd842783            lw  a5,-40(s0)
+ 1a0:   0007a703            lw  a4,0(a5)
+ 1a4:   fdc42783            lw  a5,-36(s0)
+ 1a8:   00e7a023            sw  a4,0(a5)
+ 1ac:   fd842783            lw  a5,-40(s0)
+ 1b0:   fec42703            lw  a4,-20(s0)
+ 1b4:   00e7a023            sw  a4,0(a5)
+ 1b8:   00000013            nop
+ 1bc:   02c12403            lw  s0,44(sp)
+ 1c0:   03010113            addi    sp,sp,48
+ 1c4:   00008067            ret
+
+000001c8 &lt;bubbleSort&gt;:
+ 1c8:   fd010113            addi    sp,sp,-48
+ 1cc:   02112623            sw  ra,44(sp)
+ 1d0:   02812423            sw  s0,40(sp)
+ 1d4:   03010413            addi    s0,sp,48
+ 1d8:   fca42e23            sw  a0,-36(s0)
+ 1dc:   fcb42c23            sw  a1,-40(s0)
+ 1e0:   fe042623            sw  zero,-20(s0)
+ 1e4:   09c0006f            j   280 &lt;bubbleSort+0xb8&gt;
+ 1e8:   fe042423            sw  zero,-24(s0)
+ 1ec:   0700006f            j   25c &lt;bubbleSort+0x94&gt;
+ 1f0:   fe842783            lw  a5,-24(s0)
+ 1f4:   00279793            slli    a5,a5,0x2
+ 1f8:   fdc42703            lw  a4,-36(s0)
+ 1fc:   00f707b3            add a5,a4,a5
+ 200:   0007a703            lw  a4,0(a5)
+ 204:   fe842783            lw  a5,-24(s0)
+ 208:   00178793            addi    a5,a5,1
+ 20c:   00279793            slli    a5,a5,0x2
+ 210:   fdc42683            lw  a3,-36(s0)
+ 214:   00f687b3            add a5,a3,a5
+ 218:   0007a783            lw  a5,0(a5)
+ 21c:   02e7da63            bge a5,a4,250 &lt;bubbleSort+0x88&gt;
+ 220:   fe842783            lw  a5,-24(s0)
+ 224:   00279793            slli    a5,a5,0x2
+ 228:   fdc42703            lw  a4,-36(s0)
+ 22c:   00f706b3            add a3,a4,a5
+ 230:   fe842783            lw  a5,-24(s0)
+ 234:   00178793            addi    a5,a5,1
+ 238:   00279793            slli    a5,a5,0x2
+ 23c:   fdc42703            lw  a4,-36(s0)
+ 240:   00f707b3            add a5,a4,a5
+ 244:   00078593            mv  a1,a5
+ 248:   00068513            mv  a0,a3
+ 24c:   f31ff0ef            jal ra,17c &lt;swap&gt;
+ 250:   fe842783            lw  a5,-24(s0)
+ 254:   00178793            addi    a5,a5,1
+ 258:   fef42423            sw  a5,-24(s0)
+ 25c:   fd842703            lw  a4,-40(s0)
+ 260:   fec42783            lw  a5,-20(s0)
+ 264:   40f707b3            sub a5,a4,a5
+ 268:   fff78793            addi    a5,a5,-1
+ 26c:   fe842703            lw  a4,-24(s0)
+ 270:   f8f740e3            blt a4,a5,1f0 &lt;bubbleSort+0x28&gt;
+ 274:   fec42783            lw  a5,-20(s0)
+ 278:   00178793            addi    a5,a5,1
+ 27c:   fef42623            sw  a5,-20(s0)
+ 280:   fd842783            lw  a5,-40(s0)
+ 284:   fff78793            addi    a5,a5,-1
+ 288:   fec42703            lw  a4,-20(s0)
+ 28c:   f4f74ee3            blt a4,a5,1e8 &lt;bubbleSort+0x20&gt;
+ 290:   00000013            nop
+ 294:   02c12083            lw  ra,44(sp)
+ 298:   02812403            lw  s0,40(sp)
+ 29c:   03010113            addi    sp,sp,48
+ 2a0:   00008067            ret
+
+000002a4 &lt;main&gt;:
+ 2a4:   fe010113            addi    sp,sp,-32
+ 2a8:   00112e23            sw  ra,28(sp)
+ 2ac:   00812c23            sw  s0,24(sp)
+ 2b0:   02010413            addi    s0,sp,32
+ 2b4:   fe042623            sw  zero,-20(s0)
+ 2b8:   0340006f            j   2ec &lt;main+0x48&gt;
+ 2bc:   00001737            lui a4,0x1
+ 2c0:   fec42783            lw  a5,-20(s0)
+ 2c4:   40f70733            sub a4,a4,a5
+ 2c8:   100057b7            lui a5,0x10005
+ 2cc:   fec42683            lw  a3,-20(s0)
+ 2d0:   00269693            slli    a3,a3,0x2
+ 2d4:   00078793            mv  a5,a5
+ 2d8:   00f687b3            add a5,a3,a5
+ 2dc:   00e7a023            sw  a4,0(a5) # 10005000 &lt;arr&gt;
+ 2e0:   fec42783            lw  a5,-20(s0)
+ 2e4:   00178793            addi    a5,a5,1
+ 2e8:   fef42623            sw  a5,-20(s0)
+ 2ec:   fec42703            lw  a4,-20(s0)
+ 2f0:   000017b7            lui a5,0x1
+ 2f4:   fcf744e3            blt a4,a5,2bc &lt;main+0x18&gt;
+ 2f8:   000015b7            lui a1,0x1
+ 2fc:   100057b7            lui a5,0x10005
+ 300:   00078513            mv  a0,a5
+ 304:   ec5ff0ef            jal ra,1c8 &lt;bubbleSort&gt;
+ 308:   00000013            nop
+ 30c:   01c12083            lw  ra,28(sp)
+ 310:   01812403            lw  s0,24(sp)
+ 314:   02010113            addi    sp,sp,32
+ 318:   00008067            ret</code></pre>
+</section></section>
+<section id="sorter" class="title-slide slide level2">
+<h2>Sorter</h2>
+<ul>
+<li>Has both PCPI and AXI Lite interfaces</li>
+<li>TBA</li>
+</ul>
+</section>
+
+<section>
+<section id="memory" class="title-slide slide level2">
+<h2>Memory</h2>
+
+</section>
+<section id="axi-lite-ram" class="slide level3">
+<h3>AXI Lite RAM</h3>
+<ul>
+<li>Taken from Alex Forencich’s <a
+href="https://github.com/alexforencich/verilog-axi">verilog-axi</a>
+repo</li>
+<li>Standard RAM module with AXI Lite signal handling
+<ul>
+<li>This handles proper communication of memory from Pico</li>
+</ul></li>
+<li>Used for general CPU main memory and shared sorter memory</li>
+</ul>
+</section>
+<section id="axi-lite-rom" class="slide level3">
+<h3>AXI Lite ROM</h3>
+<ul>
+<li>Modified AXI Lite RAM module to use <code>$readmemh</code>
+function</li>
+<li>Acts as instruction memory for the Pico</li>
+<li>Does not synthesize to BRAM on ECP5</li>
+</ul>
+</section></section>
+<section>
+<section id="communication" class="title-slide slide level2">
+<h2>Communication</h2>
+
+</section>
+<section id="axi-lite-uart-module" class="slide level3">
+<h3>AXI Lite UART Module</h3>
+<ul>
+<li>Taken from Dan Gisselquist’s <a
+href="https://github.com/ZipCPU/wbuart32/tree/master">wbuart32</a>
+repo</li>
+<li>Wishbone interface UART module but with an AXI Lite Version</li>
+<li>Acts as stdout for our design</li>
+</ul>
+<figure>
+<img data-src="img/overview.svg"
+alt="How the PicoSOC Design uses UART" />
+<figcaption aria-hidden="true">How the PicoSOC Design uses
+UART</figcaption>
+</figure>
+</section>
+<section id="axi-lite-interconnect" class="slide level3">
+<h3>AXI Lite Interconnect</h3>
+<ul>
+<li>Taken from Alex Forencich’s <a
+href="https://github.com/alexforencich/verilog-axi">verilog-axi</a>
+repo</li>
+<li>Act as a multiplexor or demultiplexor for AXI Lite signals</li>
+<li>Pico communications with 4 different AXI Lite Peripherals
+<ul>
+<li>This requires a 1 to 4 Interconnect</li>
+</ul></li>
+<li>Sorter RAM has two different users - sorter and Pico
+<ul>
+<li>This requires a 2 to 1 Interconnect</li>
+</ul></li>
+<li>Provided Python script generates the appriopriate wrapper module for
+each use case</li>
+</ul>
+</section></section>
+<section id="outcomes" class="title-slide slide level2">
+<h2>Outcomes</h2>
+<p>TBA</p>
+</section>
+
+<section>
+<section id="challenges" class="title-slide slide level2">
+<h2>Challenges</h2>
+<p>Several…</p>
+</section>
+<section id="original-design" class="slide level3">
+<h3>Original Design</h3>
+<figure>
+<img data-src="img/init_design.jpg"
+alt="ESP32 as hardcore with SDRAM as shared memory, AXI Stream as main communication interface" />
+<figcaption aria-hidden="true">ESP32 as hardcore with SDRAM as shared
+memory, AXI Stream as main communication interface</figcaption>
+</figure>
+</section>
+<section id="why-esp32-failed" class="slide level3">
+<h3>Why ESP32 Failed</h3>
+<ul>
+<li>Requires either a vendor specific bitstream and passthru logic to
+bypass the FTDI chip from programming the FPGA and target the ESP32
+<ul>
+<li>This is required as there is only 1 FTDI chip onboard</li>
+<li>Documentation hazy on whether this another IP or required to be our
+top module</li>
+</ul></li>
+<li>Unclear which pins are even connected to the FPGA to use for UART
+communication between the ESP32</li>
+<li>ESP-IDF does not seem to target the ESP32 but the Arduino IDE does
+<ul>
+<li>Unclear if the Arduino Serial library is using the pins we want</li>
+</ul></li>
+</ul>
+</section>
+<section id="why-axi-stream-failed" class="slide level3">
+<h3>Why AXI Stream Failed</h3>
+<ul>
+<li>Memories are not streamable targets</li>
+<li>AXI Stream has no destination
+<ul>
+<li>The other end of the wire is the destination</li>
+</ul></li>
+<li>With a read and write port it is unclear who asserts ready</li>
+<li>AXI Lite scales better due to interconnect support
+<ul>
+<li>Want to add another module? -&gt; Just make a new address for
+it</li>
+</ul></li>
+</ul>
+</section>
+<section id="why-sdram-failed" class="slide level3">
+<h3>Why SDRAM Failed</h3>
+<ul>
+<li>Unclear if the 166MHz clock is data output or what the internal FSM
+runs at
+<ul>
+<li>Would require a CDC FIFO for safe data transfer</li>
+</ul></li>
+<li>Verification is a pain
+<ul>
+<li>Verilog models are available for the specific memory but require
+industry tools to run as these are protected Verilog files (.vp)</li>
+</ul></li>
+</ul>
+</section></section>
+<section id="demo-simulation" class="title-slide slide level2">
+<h2>Demo / Simulation</h2>
+
+</section>
+
+<section id="qustions-and-answers" class="title-slide slide level2">
+<h2>Qustions and Answers</h2>
+
+</section>
+
+<section id="thanks-for-watching" class="title-slide slide level2">
+<h2>Thanks for watching</h2>
+<ul>
+<li><p>Want to contribute to the sorting accelerator?</p>
+<ul>
+<li><a
+href="https://github.com/gmejiamtz/sorting_accelerator">https://github.com/gmejiamtz/sorting_accelerator</a></li>
+</ul></li>
+<li><p>Want to contribute to a repository of C programs for the
+PicoRV32?</p>
+<ul>
+<li><a
+href="https://github.com/gmejiamtz/picorv32i_programs">https://github.com/gmejiamtz/picorv32i_programs</a></li>
+</ul></li>
+<li><p>Want to make your own project on the ULX3S or another ECP5
+FPGA?</p>
+<ul>
+<li><a
+href="https://github.com/gmejiamtz/ecp5-project-template">https://github.com/gmejiamtz/ecp5-project-template</a></li>
+</ul></li>
+</ul>
+</section>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/reveal.js//dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="https://unpkg.com/reveal.js//plugin/notes/notes.js"></script>
+  <script src="https://unpkg.com/reveal.js//plugin/search/search.js"></script>
+  <script src="https://unpkg.com/reveal.js//plugin/zoom/zoom.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+        // Display controls in the bottom right corner
+        controls: true,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: true,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'bottom-right',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: false,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: false,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: true,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'default',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: true,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'slide',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'fade',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // reveal.js plugins
+        plugins: [
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    </body>
+</html>
