@@ -421,7 +421,43 @@ Disassembly of section .text:
 ## Sorter
 
 - Has both PCPI and AXI Lite interfaces
-- TBA
+- Accepts data from sorting memory until local memory is full, sorts local memory, then returns the sorted output in from largest to smallest
+
+### Abstracting For Loops
+- For loops are unideal as they replicate the code block, which become increasingly intensive as the range increases
+- Counters act as an effective abstraction of for loops without encountering the corresponding pitfalls
+
+```
+always_comb begin
+    for_i_addr_d = for_i_addr_q;
+    for_j_addr_d = for_j_addr_q;
+
+    if (for_i_addr_d != (DATA_ENTRIES) && (i_en)) begin
+        if (for_j_addr_q != (DATA_ENTRIES-1) && (j_en)) begin
+            if (for_j_addr_q < for_i_addr_q) begin // New BS Line
+                for_j_addr_d = for_i_addr_q + 1;
+            end else begin
+                for_j_addr_d = for_j_addr_q + 1;
+            end
+        end else begin
+            if (for_i_addr_q == (DATA_ENTRIES - 1))
+                for_i_addr_d = '0;
+            else
+                for_i_addr_d = for_i_addr_q + 1;
+            if ((for_i_addr_q + 2) == (DATA_ENTRIES)) begin
+                for_j_addr_d = for_i_addr_q + 1;
+            end else if ((for_i_addr_q + 1) == (DATA_ENTRIES)) begin
+                for_j_addr_d = '0;
+            end else begin
+                for_j_addr_d = for_i_addr_q + 2;
+            end
+        end
+    end else begin
+        for_i_addr_d = for_i_addr_q;
+        for_j_addr_d = for_j_addr_q;
+    end
+end
+```
 
 ## Memory
 
