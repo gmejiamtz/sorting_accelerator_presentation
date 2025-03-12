@@ -8,7 +8,7 @@ date: March 14, 2025
 ## Overview of Project
 
 - Sorting algoritms are everywhere
-  - Sorting task by priotory
+  - Sorting task by priority
   - Sorting names in a roster
 - Simple enough to implement in software
   - At best most sorts have an O(nlog(n)) runtime
@@ -464,6 +464,7 @@ end
 ```
 
 ### Sorter Simulation
+
 
 
 ## Memory
