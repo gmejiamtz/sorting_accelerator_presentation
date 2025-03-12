@@ -556,9 +556,9 @@ Several...
 
 ## Demo / Simulation
 
-## Qustions and Answers
+## Questions and Answers
 
-## Thanks for watching
+## Thanks for Watching
 
 - Want to contribute to the sorting accelerator?
 
