@@ -86,7 +86,7 @@ Tansey</p>
 <ul>
 <li>Sorting algoritms are everywhere
 <ul>
-<li>Sorting task by priotory</li>
+<li>Sorting task by priority</li>
 <li>Sorting names in a roster</li>
 </ul></li>
 <li>Simple enough to implement in software
@@ -519,14 +519,74 @@ Disassembly of section .text:
  314:   02010113            addi    sp,sp,32
  318:   00008067            ret</code></pre>
 </section></section>
+<section>
 <section id="sorter" class="title-slide slide level2">
 <h2>Sorter</h2>
 <ul>
 <li>Has both PCPI and AXI Lite interfaces</li>
-<li>TBA</li>
+<li>Accepts data from sorting memory until local memory is full, sorts
+local memory, then returns the sorted output in from largest to
+smallest</li>
 </ul>
 </section>
+<section id="abstracting-for-loops-and-cycle-delays"
+class="slide level3">
+<h3>Abstracting For Loops and Cycle Delays</h3>
+<ul>
+<li>Some familiar statements are unsuitable for HDL:
+<ul>
+<li>For loops are unideal as they replicate the code block, which become
+increasingly intensive as the range increases</li>
+<li>Local memory accesses are done in a pipeline (utilizing Ethan’s
+pipelined_mem.sv), and are available only after 2 clock cycles</li>
+</ul></li>
+<li>Counters act as an effective abstraction of for loops and delays,
+without encountering the corresponding pitfalls</li>
+</ul>
+<p><strong>For Loop Example:</strong></p>
+<pre><code>always_comb begin
+    for_i_addr_d = for_i_addr_q;
+    for_j_addr_d = for_j_addr_q;
 
+    if (for_i_addr_d != (DATA_ENTRIES) &amp;&amp; (i_en)) begin
+        if (for_j_addr_q != (DATA_ENTRIES-1) &amp;&amp; (j_en)) begin
+            if (for_j_addr_q &lt; for_i_addr_q) begin // New BS Line
+                for_j_addr_d = for_i_addr_q + 1;
+            end else begin
+                for_j_addr_d = for_j_addr_q + 1;
+            end
+        end else begin
+            if (for_i_addr_q == (DATA_ENTRIES - 1))
+                for_i_addr_d = &#39;0;
+            else
+                for_i_addr_d = for_i_addr_q + 1;
+            if ((for_i_addr_q + 2) == (DATA_ENTRIES)) begin
+                for_j_addr_d = for_i_addr_q + 1;
+            end else if ((for_i_addr_q + 1) == (DATA_ENTRIES)) begin
+                for_j_addr_d = &#39;0;
+            end else begin
+                for_j_addr_d = for_i_addr_q + 2;
+            end
+        end
+    end else begin
+        for_i_addr_d = for_i_addr_q;
+        for_j_addr_d = for_j_addr_q;
+    end
+end</code></pre>
+</section>
+<section id="sorter-simulation" class="slide level3">
+<h3>Sorter Simulation</h3>
+<figure>
+<img data-src="img/sim_sort.png"
+alt="Sorting Memory with Insertion Sort" />
+<figcaption aria-hidden="true">Sorting Memory with Insertion
+Sort</figcaption>
+</figure>
+<figure>
+<img data-src="img/sim_out.png" alt="Output of Sorter" />
+<figcaption aria-hidden="true">Output of Sorter</figcaption>
+</figure>
+</section></section>
 <section>
 <section id="memory" class="title-slide slide level2">
 <h2>Memory</h2>

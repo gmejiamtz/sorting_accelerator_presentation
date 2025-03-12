@@ -465,9 +465,9 @@ end
 
 ### Sorter Simulation
 
-[mem_sorting](img/sim_sort.png)
+![Sorting Memory with Insertion Sort](img/sim_sort.png)
 
-[mem_output](img/sim_out.png)
+![Output of Sorter](img/sim_out.png)
 
 ## Memory
 
