@@ -1126,7 +1126,7 @@ endmodule
 - Specifications for SDRAM configurations were vague and inconsistent
 - Would require a CDC FIFO for safe data transfer to and from PicoRV32
 - Would have to add on AXI Lite to interface with most components of the system
-- Verification is a pain
+- Verification difficulties
   - Verilog models are available for the specific memory but require industry tools to run as these are protected Verilog files (.vp)
 
 ---
