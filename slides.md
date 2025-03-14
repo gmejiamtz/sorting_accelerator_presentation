@@ -514,7 +514,16 @@ TBA
 
 ## Challenges
 
-Several...
+### Sorter
+- Creating a sorting algorithm without for loops, function calls, or direct array manipulation
+  - Incomplete conditions between for loops and sorter
+-  Timing between state machine and pipelined memory
+  - Read validity for sorting algorithm
+  - Data validity for AXIL
+  - Termination of states too early
+  - Memory overwriting itself with 'x
+- Pipelined memory read/write calls; read_valid_o and request_valid_i
+- AXIL Interface (overlapping vs mutually exclusive signals)
 
 ---
 
