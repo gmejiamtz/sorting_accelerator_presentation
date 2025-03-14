@@ -8,7 +8,7 @@ date: March 14, 2025
 ## Overview of Project
 
 - Sorting algoritms are everywhere
-  - Sorting task by priotory
+  - Sorting task by priority
   - Sorting names in a roster
 - Simple enough to implement in software
   - At best most sorts have an O(nlog(n)) runtime
@@ -421,7 +421,53 @@ Disassembly of section .text:
 ## Sorter
 
 - Has both PCPI and AXI Lite interfaces
-- TBA
+- Accepts data from sorting memory until local memory is full, sorts local memory, then returns the sorted output in from largest to smallest
+
+### Abstracting For Loops and Cycle Delays
+- Some familiar statements are unsuitable for HDL:
+  - For loops are unideal as they replicate the code block, which become increasingly intensive as the range increases
+  - Local memory accesses are done in a pipeline (utilizing Ethan's pipelined_mem.sv), and are available only after 2 clock cycles
+    
+- Counters act as an effective abstraction of for loops and delays, without encountering the corresponding pitfalls
+
+**For Loop Example:**
+```
+always_comb begin
+    for_i_addr_d = for_i_addr_q;
+    for_j_addr_d = for_j_addr_q;
+
+    if (for_i_addr_d != (DATA_ENTRIES) && (i_en)) begin
+        if (for_j_addr_q != (DATA_ENTRIES-1) && (j_en)) begin
+            if (for_j_addr_q < for_i_addr_q) begin // New BS Line
+                for_j_addr_d = for_i_addr_q + 1;
+            end else begin
+                for_j_addr_d = for_j_addr_q + 1;
+            end
+        end else begin
+            if (for_i_addr_q == (DATA_ENTRIES - 1))
+                for_i_addr_d = '0;
+            else
+                for_i_addr_d = for_i_addr_q + 1;
+            if ((for_i_addr_q + 2) == (DATA_ENTRIES)) begin
+                for_j_addr_d = for_i_addr_q + 1;
+            end else if ((for_i_addr_q + 1) == (DATA_ENTRIES)) begin
+                for_j_addr_d = '0;
+            end else begin
+                for_j_addr_d = for_i_addr_q + 2;
+            end
+        end
+    end else begin
+        for_i_addr_d = for_i_addr_q;
+        for_j_addr_d = for_j_addr_q;
+    end
+end
+```
+
+### Sorter Simulation
+
+![Sorting Memory with Insertion Sort](img/sim_sort.png)
+
+![Output of Sorter](img/sim_out.png)
 
 ## Memory
 
@@ -468,7 +514,16 @@ TBA
 
 ## Challenges
 
-Several...
+### Sorter
+- Creating a sorting algorithm without for loops, function calls, or direct array manipulation
+  - Incomplete conditions between for loops and sorter
+-  Timing between state machine and pipelined memory
+  - Read validity for sorting algorithm
+  - Data validity for AXIL
+  - Termination of states too early
+  - Memory overwriting itself with 'x
+- Pipelined memory read/write calls; read_valid_o and request_valid_i
+- AXIL Interface (overlapping vs mutually exclusive signals)
 
 ---
 
@@ -510,9 +565,9 @@ Several...
 
 ## Demo / Simulation
 
-## Qustions and Answers
+## Questions and Answers
 
-## Thanks for watching
+## Thanks for Watching
 
 - Want to contribute to the sorting accelerator?
 
