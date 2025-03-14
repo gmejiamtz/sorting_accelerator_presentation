@@ -189,6 +189,15 @@ done</li>
 <li>Requires C code to inline an instruction for sorting instead of
 compiling a function</li>
 </ul></li>
+<li>Created new instruction: 0x0x81FF8FB3
+<ul>
+<li>rd,rs1 and are rs2 are all 1’s</li>
+<li>opcode is 0b0110011
+<ul>
+<li>same as all R type instructions in RISCV32IM</li>
+</ul></li>
+<li>Fucnction7 field is 0b1000000 instead of 0b0000001</li>
+</ul></li>
 </ul>
 </section>
 <section id="main-c-program---bubble-sort" class="slide level3">
@@ -1266,11 +1275,12 @@ it</li>
 <section id="why-sdram-failed" class="slide level3">
 <h3>Why SDRAM Failed</h3>
 <ul>
-<li>Unclear if the 166MHz clock is data output or what the internal FSM
-runs at
-<ul>
-<li>Would require a CDC FIFO for safe data transfer</li>
-</ul></li>
+<li>Specifications for SDRAM configurations were vague and
+inconsistent</li>
+<li>Would require a CDC FIFO for safe data transfer to and from
+PicoRV32</li>
+<li>Would have to add on AXI Lite to interface with most components of
+the system</li>
 <li>Verification is a pain
 <ul>
 <li>Verilog models are available for the specific memory but require

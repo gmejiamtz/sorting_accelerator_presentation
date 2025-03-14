@@ -81,6 +81,11 @@ date: March 14, 2025
   - Sends this instruction to the sorter to begin sorting
   - Receives an instruction back to signal sorter is sorting or done
   - Requires C code to inline an instruction for sorting instead of compiling a function
+- Created new instruction: 0x0x81FF8FB3
+  - rd,rs1 and are rs2 are all 1's
+  - opcode is 0b0110011
+    - same as all R type instructions in RISCV32IM
+  - Fucnction7 field is 0b1000000 instead of 0b0000001
 
 ---
 
@@ -1119,7 +1124,8 @@ endmodule
 ### Why SDRAM Failed
 
 - Specifications for SDRAM configurations were vague and inconsistent
-- Would require a CDC FIFO for safe data transfer
+- Would require a CDC FIFO for safe data transfer to and from PicoRV32
+- Would have to add on AXI Lite to interface with most components of the system
 - Verification is a pain
   - Verilog models are available for the specific memory but require industry tools to run as these are protected Verilog files (.vp)
 
