@@ -1128,6 +1128,7 @@ endmodule
 - Would have to add on AXI Lite to interface with most components of the system
 - Verification difficulties
   - Verilog models are available for the specific memory but require industry tools to run as these are protected Verilog files (.vp)
+  - Simulated using Cadence Xcelium
 
 ---
 
