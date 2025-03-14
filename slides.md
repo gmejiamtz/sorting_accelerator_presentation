@@ -523,6 +523,8 @@ TBA
 
 ## Challenges
 
+---
+
 ### Sorter
 
 - Creating a sorting algorithm without for loops, function calls, or direct array manipulation
