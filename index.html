@@ -543,6 +543,9 @@ pipelined_mem.sv), and are available only after 2 clock cycles</li>
 <li>Counters act as an effective abstraction of for loops and delays,
 without encountering the corresponding pitfalls</li>
 </ul>
+</section>
+<section id="sorting-rtl" class="slide level3">
+<h3>Sorting RTL</h3>
 <p><strong>For Loop Example:</strong></p>
 <pre><code>always_comb begin
     for_i_addr_d = for_i_addr_q;
@@ -574,14 +577,17 @@ without encountering the corresponding pitfalls</li>
     end
 end</code></pre>
 </section>
-<section id="sorter-simulation" class="slide level3">
-<h3>Sorter Simulation</h3>
+<section id="sorter-simulations" class="slide level3">
+<h3>Sorter Simulations</h3>
 <figure>
 <img data-src="img/sim_sort.png"
 alt="Sorting Memory with Insertion Sort" />
 <figcaption aria-hidden="true">Sorting Memory with Insertion
 Sort</figcaption>
 </figure>
+</section>
+<section id="sorter-output-simulation" class="slide level3">
+<h3>Sorter Output Simulation</h3>
 <figure>
 <img data-src="img/sim_out.png" alt="Output of Sorter" />
 <figcaption aria-hidden="true">Output of Sorter</figcaption>
@@ -662,7 +668,25 @@ each use case</li>
 <section>
 <section id="challenges" class="title-slide slide level2">
 <h2>Challenges</h2>
-<p>Several…</p>
+
+</section>
+<section id="sorter-1" class="slide level3">
+<h3>Sorter</h3>
+<ul>
+<li>Creating a sorting algorithm without for loops, function calls, or
+direct array manipulation
+<ul>
+<li>Incomplete conditions between for loops and sorter</li>
+</ul></li>
+<li>Timing between state machine and pipelined memory</li>
+<li>Read validity for sorting algorithm</li>
+<li>Data validity for AXIL</li>
+<li>Termination of states too early</li>
+<li>Memory overwriting itself with ’x</li>
+<li>Pipelined memory read/write calls; read_valid_o and
+request_valid_i</li>
+<li>AXIL Interface (overlapping vs mutually exclusive signals)</li>
+</ul>
 </section>
 <section id="original-design" class="slide level3">
 <h3>Original Design</h3>
@@ -727,13 +751,13 @@ industry tools to run as these are protected Verilog files (.vp)</li>
 
 </section>
 
-<section id="qustions-and-answers" class="title-slide slide level2">
-<h2>Qustions and Answers</h2>
+<section id="questions-and-answers" class="title-slide slide level2">
+<h2>Questions and Answers</h2>
 
 </section>
 
 <section id="thanks-for-watching" class="title-slide slide level2">
-<h2>Thanks for watching</h2>
+<h2>Thanks for Watching</h2>
 <ul>
 <li><p>Want to contribute to the sorting accelerator?</p>
 <ul>

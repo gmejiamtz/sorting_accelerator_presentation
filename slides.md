@@ -424,13 +424,18 @@ Disassembly of section .text:
 - Accepts data from sorting memory until local memory is full, sorts local memory, then returns the sorted output in from largest to smallest
 
 ### Abstracting For Loops and Cycle Delays
+
 - Some familiar statements are unsuitable for HDL:
   - For loops are unideal as they replicate the code block, which become increasingly intensive as the range increases
   - Local memory accesses are done in a pipeline (utilizing Ethan's pipelined_mem.sv), and are available only after 2 clock cycles
-    
 - Counters act as an effective abstraction of for loops and delays, without encountering the corresponding pitfalls
 
+---
+
+### Sorting RTL
+
 **For Loop Example:**
+
 ```
 always_comb begin
     for_i_addr_d = for_i_addr_q;
@@ -463,9 +468,13 @@ always_comb begin
 end
 ```
 
-### Sorter Simulation
+### Sorter Simulations
 
 ![Sorting Memory with Insertion Sort](img/sim_sort.png)
+
+---
+
+### Sorter Output Simulation
 
 ![Output of Sorter](img/sim_out.png)
 
@@ -515,13 +524,14 @@ TBA
 ## Challenges
 
 ### Sorter
+
 - Creating a sorting algorithm without for loops, function calls, or direct array manipulation
   - Incomplete conditions between for loops and sorter
--  Timing between state machine and pipelined memory
-  - Read validity for sorting algorithm
-  - Data validity for AXIL
-  - Termination of states too early
-  - Memory overwriting itself with 'x
+- Timing between state machine and pipelined memory
+- Read validity for sorting algorithm
+- Data validity for AXIL
+- Termination of states too early
+- Memory overwriting itself with 'x
 - Pipelined memory read/write calls; read_valid_o and request_valid_i
 - AXIL Interface (overlapping vs mutually exclusive signals)
 
