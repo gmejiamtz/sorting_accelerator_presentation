@@ -601,7 +601,7 @@ end
 
 ### AXI Lite UART Module
 
-- Taken from Dan Gisselquist's [verilog-uart](https://github.com/alexforencich/verilog-uart) repo
+- Taken from Alex Forencich's [verilog-uart](https://github.com/alexforencich/verilog-uart) repo
 - AXI Stream interface that directly interfaces with the stdout buffer FIFO
 - Acts as stdout for our design
 
@@ -613,7 +613,7 @@ end
 
 - Taken from Alex Forencich's [verilog-axi](https://github.com/alexforencich/verilog-axi) repo
 - Act as a multiplexor or demultiplexor for AXI Lite signals
-- Pico communications with 4 different AXI Lite Peripherals
+- Pico communications with 3 different AXI Lite Peripherals
   - This requires a 1 to 3 Interconnect
 - Sorter RAM has two different users - sorter and Pico
   - This requires a 2 to 1 Interconnect
